@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BMI 计算器</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --text: #1a1a2e;
+    --text-light: #6b7280;
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --underweight: #60a5fa;
+    --normal: #34d399;
+    --overweight: #fbbf24;
+    --obese: #f87171;
+    --radius: 20px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.06);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.10);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #e0e7ff 0%, #f0f4f8 40%, #e8f4f8 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 440px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 40px 36px;
+    box-shadow: var(--shadow);
+    animation: fadeIn 0.6s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .header .icon {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--primary), #818cf8);
+    border-radius: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 16px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.06); }
+  }
+
+  .header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+
+  .header p {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-top: 6px;
+  }
+
+  /* ── Form ── */
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .input-wrapper {
+    position: relative;
+  }
+
+  .input-wrapper input {
+    width: 100%;
+    padding: 14px 48px 14px 16px;
+    font-size: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 14px;
+    background: #f9fafb;
+    color: var(--text);
+    transition: all 0.25s ease;
+    outline: none;
+    font-family: inherit;
+  }
+
+  .input-wrapper input:focus {
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(79,70,229,0.08);
+  }
+
+  .input-wrapper input.error {
+    border-color: #f87171;
+    background: #fef2f2;
+  }
+
+  .input-wrapper .unit {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--text-light);
+    font-weight: 500;
+    pointer-events: none;
+  }
+
+  .error-msg {
+    font-size: 12px;
+    color: #f87171;
+    margin-top: 4px;
+    min-height: 18px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .error-msg.visible { opacity: 1; }
+
+  /* ── Button ── */
+  .calc-btn {
+    width: 100%;
+    padding: 15px;
+    font-size: 17px;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary), #6366f1);
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+    margin-top: 4px;
+  }
+
+  .calc-btn:hover {
+    background: linear-gradient(135deg, var(--primary-hover), #4f46e5);
+    box-shadow: 0 6px 20px rgba(79,70,229,0.3);
+    transform: translateY(-1px);
+  }
+
+  .calc-btn:active {
+    transform: translateY(0);
+  }
+
+  /* ── Result ── */
+  .result {
+    margin-top: 28px;
+    padding: 24px;
+    border-radius: 16px;
+    text-align: center;
+    display: none;
+    animation: slideUp 0.4s ease;
+  }
+
+  .result.show { display: block; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .result .bmi-value {
+    font-size: 44px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+
+  .result .bmi-label {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.7;
+    margin-bottom: 12px;
+  }
+
+  .result .level {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .result .encourage {
+    font-size: 14px;
+    line-height: 1.6;
+    opacity: 0.9;
+  }
+
+  /* ── Level colors ── */
+  .level-underweight { background: #eff6ff; border: 1px solid #bfdbfe; }
+  .level-underweight .bmi-value { color: var(--underweight); }
+  .level-underweight .level  { color: #2563eb; }
+
+  .level-normal { background: #ecfdf5; border: 1px solid #a7f3d0; }
+  .level-normal .bmi-value { color: var(--normal); }
+  .level-normal .level  { color: #059669; }
+
+  .level-overweight { background: #fffbeb; border: 1px solid #fde68a; }
+  .level-overweight .bmi-value { color: var(--overweight); }
+  .level-overweight .level  { color: #d97706; }
+
+  .level-obese { background: #fef2f2; border: 1px solid #fecaca; }
+  .level-obese .bmi-value { color: var(--obese); }
+  .level-obese .level  { color: #dc2626; }
+
+  /* ── Responsive ── */
+  @media (max-width: 480px) {
+    .card { padding: 28px 22px; }
+    .header h1 { font-size: 22px; }
+    .result .bmi-value { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="icon">&#9878;</div>
+      <h1>BMI 计算器</h1>
+      <p>输入身高体重，了解你的身体状况</p>
+    </div>
+
+    <!-- Form -->
+    <form id="bmiForm" novalidate>
+      <div class="form-group">
+        <label for="height">身高</label>
+        <div class="input-wrapper">
+          <input type="text" id="height" placeholder="请输入身高" autocomplete="off">
+          <span class="unit">cm</span>
+        </div>
+        <div class="error-msg" id="heightError"></div>
+      </div>
+
+      <div class="form-group">
+        <label for="weight">体重</label>
+        <div class="input-wrapper">
+          <input type="text" id="weight" placeholder="请输入体重" autocomplete="off">
+          <span class="unit">kg</span>
+        </div>
+        <div class="error-msg" id="weightError"></div>
+      </div>
+
+      <button type="submit" class="calc-btn">计算 BMI</button>
+    </form>
+
+    <!-- Result -->
+    <div class="result" id="result">
+      <div class="bmi-value" id="bmiValue"></div>
+      <div class="bmi-label">BMI 指数</div>
+      <div class="level" id="level"></div>
+      <div class="encourage" id="encourage"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const form    = document.getElementById('bmiForm');
+  const height  = document.getElementById('height');
+  const weight  = document.getElementById('weight');
+  const hErr    = document.getElementById('heightError');
+  const wErr    = document.getElementById('weightError');
+  const result  = document.getElementById('result');
+  const bmiVal  = document.getElementById('bmiValue');
+  const levelEl = document.getElementById('level');
+  const encEl   = document.getElementById('encourage');
+
+  const LEVELS = [
+    { max: 18.5,  key: 'underweight', class: 'level-underweight', label: '偏瘦',
+      msg: '可以适当多吃点哦！' },
+    { max: 24,    key: 'normal',      class: 'level-normal',      label: '正常',
+      msg: '加油继续保持，你真棒！' },
+    { max: 28,    key: 'overweight',  class: 'level-overweight',  label: '超重',
+      msg: '我真得控制控制你了，管住嘴！' },
+    { max: Infinity, key: 'obese',    class: 'level-obese',       label: '肥胖',
+      msg: '管住嘴，迈开腿，加油我相信你能够瘦下来的！' },
+  ];
+
+  function validate(v, fieldName) {
+    if (v === '') return `请输入${fieldName}`;
+    if (!/^\d+(\.\d+)?$/.test(v)) return `${fieldName}必须是数字`;
+    const n = parseFloat(v);
+    if (n < 0)  return `${fieldName}不能为负数`;
+    if (n === 0) return `${fieldName}不能为0`;
+    if (n > 300) return `${fieldName}超出合理范围`;
+    return '';
+  }
+
+  function showError(el, msg) {
+    el.textContent = msg;
+    el.classList.toggle('visible', !!msg);
+  }
+
+  height.addEventListener('input', function() {
+    this.classList.remove('error');
+    showError(hErr, '');
+  });
+
+  weight.addEventListener('input', function() {
+    this.classList.remove('error');
+    showError(wErr, '');
+  });
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const hVal = height.value.trim();
+    const wVal = weight.value.trim();
+
+    const hMsg = validate(hVal, '身高');
+    const wMsg = validate(wVal, '体重');
+
+    height.classList.toggle('error', !!hMsg);
+    weight.classList.toggle('error', !!wMsg);
+    showError(hErr, hMsg);
+    showError(wErr, wMsg);
+
+    if (hMsg || wMsg) return;
+
+    const h = parseFloat(hVal) / 100; // m
+    const w = parseFloat(wVal);
+    const bmi = w / (h * h);
+    const rounded = bmi.toFixed(1);
+
+    const level = LEVELS.find(l => bmi < l.max);
+
+    // 清除旧样式
+    LEVELS.forEach(l => result.classList.remove(l.class));
+    result.classList.add(level.class, 'show');
+
+    bmiVal.textContent  = rounded;
+    levelEl.textContent = level.label;
+    encEl.textContent   = level.msg;
+  });
+</script>
+
+</body>
+</html>
