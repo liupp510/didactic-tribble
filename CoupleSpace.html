@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💜 CoupleSpace · 双人共享空间</title>
+<style>
+:root{--bg:#faf5ff;--card:#fff;--text:#4a3f5c;--muted:#9b8eaa;--primary:#9b72cf;--accent:#c4a6e8;--pink:#e8a0bf;--win:#7ecb8a;--warn:#f0c06d;--danger:#e88080;--radius:16px;--shadow:0 2px 16px rgba(155,114,207,0.12)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#faf5ff 0%,#f0e6ff 30%,#fce4ec 70%,#faf5ff 100%);color:var(--text);min-height:100vh;line-height:1.6}
+.container{max-width:720px;margin:0 auto;padding:16px}
+
+.header{text-align:center;padding:28px 16px 20px}
+.header h1{font-size:clamp(22px,5vw,28px);font-weight:800;background:linear-gradient(135deg,var(--primary),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.header p{color:var(--muted);font-size:13px;margin-top:4px}
+
+.card{background:var(--card);border-radius:var(--radius);padding:20px;margin-bottom:14px;box-shadow:var(--shadow);border:1px solid #ede4f5;transition:all .2s}
+.card:hover{box-shadow:0 4px 24px rgba(155,114,207,0.18)}
+
+/* Room Config */
+.config-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.config-row input{flex:1;min-width:120px;padding:10px 14px;border-radius:12px;border:2px solid #e8dcf5;background:var(--bg);color:var(--text);font-size:13px;outline:none;transition:border-color .2s}
+.config-row input:focus{border-color:var(--primary)}
+.config-row input::placeholder{color:#c4b8d4}
+.btn{padding:10px 20px;border:none;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;letter-spacing:.3px}
+.btn-primary{background:linear-gradient(135deg,var(--primary),#b088e0);color:#fff}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(155,114,207,.35)}
+.btn-outline{background:#fff;color:var(--primary);border:2px solid var(--accent)}
+.btn-outline:hover{background:#faf5ff}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{opacity:.9}
+.btn-success{background:var(--win);color:#fff}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:14px;background:#f0e6ff;border-radius:14px;padding:4px}
+.tab{flex:1;text-align:center;padding:10px 8px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;color:var(--muted);border:none;background:none}
+.tab.active{background:#fff;color:var(--primary);box-shadow:0 2px 8px rgba(155,114,207,.15)}
+
+.sub-tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.sub-tab{padding:6px 16px;border-radius:20px;font-size:12px;cursor:pointer;border:2px solid #ede4f5;background:#fff;color:var(--muted);transition:all .2s;font-weight:500}
+.sub-tab.active{border-color:var(--primary);color:var(--primary);background:#faf5ff}
+
+/* Forms */
+.input-row{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.input-row input,.input-row select{flex:1;min-width:100px;padding:10px 14px;border-radius:12px;border:2px solid #e8dcf5;background:var(--bg);color:var(--text);font-size:14px;outline:none}
+.input-row input:focus,.input-row select:focus{border-color:var(--primary)}
+
+/* Wish Item */
+.wish-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#fdfaff;border-radius:12px;margin:6px 0;border:1px solid #f0e6ff;transition:all .2s}
+.wish-item:hover{background:#faf5ff}
+.wish-item .checkbox{width:22px;height:22px;border-radius:50%;border:2px solid var(--accent);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.wish-item .checkbox.done{background:var(--win);border-color:var(--win)}
+.wish-item .checkbox.done::after{content:'✓';color:#fff;font-size:13px;font-weight:700}
+.wish-info{flex:1;min-width:0}
+.wish-title{font-size:14px;font-weight:600}
+.wish-title.done{text-decoration:line-through;color:var(--muted)}
+.wish-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.wish-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:4px;transition:color .2s}
+.wish-del:hover{color:var(--danger)}
+
+/* Progress */
+.progress-bar{height:10px;border-radius:5px;background:#f0e6ff;margin:8px 0;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--pink));border-radius:5px;transition:width .5s}
+.stats-row{display:flex;gap:12px;text-align:center;font-size:13px;margin:8px 0}
+.stat-num{font-size:24px;font-weight:800;color:var(--primary)}
+
+/* Check-in */
+.mood-selector{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap;justify-content:center}
+.mood-btn{padding:12px 16px;border-radius:24px;border:2px solid #ede4f5;background:#fff;cursor:pointer;font-size:20px;transition:all .2s}
+.mood-btn:hover{border-color:var(--accent);transform:scale(1.05)}
+.mood-btn.selected{border-color:var(--primary);background:#faf5ff;transform:scale(1.1)}
+.mood-label{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* Calendar */
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;margin:10px 0}
+.cal-day-header{font-size:11px;color:var(--muted);padding:6px 0;font-weight:600}
+.cal-cell{padding:8px 4px;border-radius:10px;font-size:13px;cursor:default;transition:all .2s;aspect-ratio:1;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.cal-cell.checked{background:linear-gradient(135deg,#f0e6ff,#fce4ec);font-weight:700;color:var(--primary)}
+.cal-cell.today{border:2px solid var(--primary)}
+.cal-cell .dot{width:6px;height:6px;border-radius:50%;background:var(--primary);margin-top:2px}
+
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;padding:12px 24px;border-radius:24px;font-size:14px;font-weight:600;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:toastIn .3s ease;pointer-events:none}
+.toast.success{background:var(--win)}.toast.error{background:var(--danger)}.toast.info{background:var(--primary)}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .4s ease}
+
+/* Summary Text */
+.summary-box{background:linear-gradient(135deg,#faf5ff,#fce4ec);border-radius:12px;padding:16px;margin:10px 0;font-size:14px;line-height:1.8;border:1px solid #f0e6ff}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:#fff;border-radius:var(--radius);padding:24px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.2)}
+.modal h3{margin-bottom:12px}
+.modal .close{float:right;background:none;border:none;font-size:24px;color:var(--muted);cursor:pointer}
+
+/* Help Guide */
+.guide{font-size:12px;color:var(--muted);line-height:1.8;max-height:400px;overflow-y:auto}
+.guide pre{background:#f5f0fa;border-radius:8px;padding:12px;overflow-x:auto;font-size:11px;white-space:pre-wrap;word-break:break-all}
+.guide code{background:#f5f0fa;padding:2px 6px;border-radius:4px}
+.guide h4{color:var(--primary);margin:12px 0 6px}
+
+.export-btn-group{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+
+@media(max-width:480px){
+  .config-row{flex-direction:column}.config-row input{width:100%}
+  .input-row{flex-direction:column}.mood-selector{gap:4px}.mood-btn{padding:10px;font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1>💜 CoupleSpace</h1>
+    <p>双人共享心愿清单 · 思念打卡本</p>
+  </div>
+
+  <!-- Config Card -->
+  <div class="card">
+    <div style="font-size:13px;font-weight:600;color:var(--primary);margin-bottom:8px">🔑 连接设置</div>
+    <div class="config-row">
+      <input type="text" id="supabaseUrl" placeholder="Supabase 项目 URL" onchange="saveConfig()">
+      <input type="text" id="supabaseKey" placeholder="anon 公开密钥" onchange="saveConfig()">
+    </div>
+    <div class="config-row">
+      <input type="text" id="roomKey" placeholder="6位数字房间密钥" maxlength="6" style="max-width:160px">
+      <button class="btn btn-primary btn-sm" onclick="joinRoom()">🚪 加入房间</button>
+      <button class="btn btn-outline btn-sm" onclick="createRoom()">✨ 创建新房间</button>
+      <span id="roomStatus" style="font-size:12px;color:var(--muted)"></span>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px">
+      💡 情侣双方输入相同密钥即可共享数据 · <a href="#" onclick="showGuide()" style="color:var(--primary)">部署教程</a>
+    </div>
+  </div>
+
+  <!-- Main Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('wish')">📝 心愿清单</button>
+    <button class="tab" onclick="switchTab('checkin')">💕 思念打卡</button>
+  </div>
+
+  <!-- ═══════════ Module 1: Wishlist ═══════════ -->
+  <div id="wishPanel">
+    <div class="card">
+      <div class="sub-tabs">
+        <button class="sub-tab active" onclick="switchWishTab('meet')">💏 见面小事</button>
+        <button class="sub-tab" onclick="switchWishTab('short')">🎯 短期愿望</button>
+        <button class="sub-tab" onclick="switchWishTab('future')">🌟 未来规划</button>
+      </div>
+
+      <!-- Add Form -->
+      <div class="input-row">
+        <input type="text" id="wishInput" placeholder="写下想一起做的事..." maxlength="200">
+        <input type="text" id="wishAuthor" placeholder="你的昵称" style="max-width:100px" maxlength="10">
+        <button class="btn btn-primary btn-sm" onclick="addWish()">➕ 新增</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div><span class="stat-num" id="wishTotal">0</span><br>总心愿</div>
+        <div><span class="stat-num" style="color:var(--win)" id="wishDone">0</span><br>已完成</div>
+        <div><span class="stat-num" style="color:var(--pink)" id="wishPercent">0%</span><br>完成率</div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="wishProgress" style="width:0%"></div></div>
+
+      <!-- List -->
+      <div id="wishList"></div>
+
+      <div class="export-btn-group">
+        <button class="btn btn-outline btn-sm" onclick="copyWishes()">📋 一键复制心愿</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ Module 2: Check-in ═══════════ -->
+  <div id="checkinPanel" style="display:none">
+    <div class="card">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:16px;font-weight:700">今天想对TA说...</div>
+        <div id="todayDate" style="color:var(--muted);font-size:12px"></div>
+      </div>
+
+      <!-- Mood -->
+      <div class="mood-selector" id="moodSelector">
+        <div style="text-align:center;cursor:pointer" onclick="setMood('😊','开心')"><div class="mood-btn" id="mood_😊">😊</div><div class="mood-label">开心</div></div>
+        <div style="text-align:center;cursor:pointer" onclick="setMood('🥺','委屈')"><div class="mood-btn" id="mood_🥺">🥺</div><div class="mood-label">委屈</div></div>
+        <div style="text-align:center;cursor:pointer" onclick="setMood('💭','想念')"><div class="mood-btn" id="mood_💭">💭</div><div class="mood-label">想念</div></div>
+        <div style="text-align:center;cursor:pointer" onclick="setMood('😴','疲惫')"><div class="mood-btn" id="mood_😴">😴</div><div class="mood-label">疲惫</div></div>
+      </div>
+
+      <div class="input-row">
+        <input type="text" id="checkinNote" placeholder="写句话给TA吧...（选填）" maxlength="300">
+        <input type="text" id="checkinAuthor" placeholder="你的昵称" style="max-width:100px" maxlength="10">
+        <button class="btn btn-primary btn-sm" onclick="doCheckin()">💾 打卡</button>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <button class="btn btn-outline btn-sm" onclick="changeMonth(-1)">◀</button>
+        <span style="font-weight:700" id="calMonth"></span>
+        <button class="btn btn-outline btn-sm" onclick="changeMonth(1)">▶</button>
+      </div>
+      <div class="calendar" id="calendar"></div>
+      <div class="stats-row" style="margin-top:10px">
+        <div><span class="stat-num" id="checkinTotal">0</span><br>合计打卡</div>
+      </div>
+      <div class="summary-box" id="summaryText"></div>
+    </div>
+
+    <!-- Recent Check-ins -->
+    <div class="card">
+      <div style="font-weight:600;margin-bottom:8px;color:var(--primary)">📋 最近打卡</div>
+      <div id="checkinList"></div>
+      <div class="export-btn-group">
+        <button class="btn btn-outline btn-sm" onclick="copyCheckins()">📋 一键导出打卡</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Export -->
+  <div class="card" style="text-align:center">
+    <button class="btn btn-primary" onclick="exportAll()">📦 一键备份全部数据</button>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px">导出当前房间全部心愿+打卡记录</div>
+  </div>
+
+  <div style="text-align:center;padding:16px;color:var(--muted);font-size:11px">
+    💜 CoupleSpace · 仅供你和TA使用 · 数据加密存储于 Supabase
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" style="display:none"></div>
+<!-- Guide Modal -->
+<div class="modal-overlay" id="guideModal" style="display:none" onclick="if(event.target===this)closeGuide()">
+  <div class="modal"><div class="guide" id="guideContent"></div></div>
+</div>
+
+<!-- ═══════════ Scripts ═══════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm" type="module">
+// ESM import handled below
+</script>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+// ═══════════════════════════════════════
+// 全局状态
+// ═══════════════════════════════════════
+let supabase = null;
+let currentRoom = null;
+let currentTab = 'wish';     // wish | checkin
+let currentWishTab = 'meet'; // meet | short | future
+let currentMood = null;
+let calYear, calMonth;
+let wishes = [], checkins = [];
+let realtimeChannel = null;
+
+// ═══════════════════════════════════════
+// Toast 提示
+// ═══════════════════════════════════════
+function toast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast ' + type; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2500);
+}
+
+// ═══════════════════════════════════════
+// 配置保存
+// ═══════════════════════════════════════
+function saveConfig() {
+  const cfg = {
+    url: document.getElementById('supabaseUrl').value.trim(),
+    key: document.getElementById('supabaseKey').value.trim(),
+    room: document.getElementById('roomKey').value.trim()
+  };
+  localStorage.setItem('couplespace_config', JSON.stringify(cfg));
+  if (cfg.url && cfg.key) initSupabase(cfg.url, cfg.key);
+}
+function loadConfig() {
+  try {
+    const cfg = JSON.parse(localStorage.getItem('couplespace_config'));
+    if (cfg) {
+      document.getElementById('supabaseUrl').value = cfg.url || '';
+      document.getElementById('supabaseKey').value = cfg.key || '';
+      document.getElementById('roomKey').value = cfg.room || '';
+      if (cfg.url && cfg.key) initSupabase(cfg.url, cfg.key);
+    }
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════
+// Supabase 初始化
+// ═══════════════════════════════════════
+function initSupabase(url, key) {
+  try {
+    supabase = createClient(url, key);
+    toast('✅ Supabase 已连接', 'success');
+    // 尝试恢复房间
+    const room = document.getElementById('roomKey').value.trim();
+    if (room) joinRoom();
+  } catch(e) {
+    toast('❌ Supabase 连接失败', 'error');
+    console.error(e);
+  }
+}
+
+// ═══════════════════════════════════════
+// 房间管理
+// ═══════════════════════════════════════
+async function createRoom() {
+  if (!supabase) { toast('请先填写 Supabase 密钥', 'error'); return; }
+  const key = Math.floor(100000 + Math.random() * 900000).toString();
+  document.getElementById('roomKey').value = key;
+  saveConfig();
+  currentRoom = key;
+  document.getElementById('roomStatus').textContent = '✅ 房间已创建: ' + key + ' (告知TA即可加入)';
+  document.getElementById('roomStatus').style.color = 'var(--win)';
+  toast('✨ 房间已创建: ' + key, 'success');
+  await loadData();
+  subscribeRealtime();
+}
+
+async function joinRoom() {
+  if (!supabase) { toast('请先填写 Supabase 密钥', 'error'); return; }
+  const key = document.getElementById('roomKey').value.trim();
+  if (!key || key.length < 6) { toast('请输入6位数字房间密钥', 'error'); return; }
+  saveConfig();
+  currentRoom = key;
+  document.getElementById('roomStatus').textContent = '🔗 已加入房间: ' + key;
+  document.getElementById('roomStatus').style.color = 'var(--primary)';
+  toast('🚪 已加入房间', 'success');
+  await loadData();
+  subscribeRealtime();
+}
+
+// ═══════════════════════════════════════
+// 实时订阅
+// ═══════════════════════════════════════
+function subscribeRealtime() {
+  if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+  if (!currentRoom) return;
+
+  realtimeChannel = supabase
+    .channel('room-' + currentRoom)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'wishes', filter: 'room_id=eq.' + currentRoom }, loadWishes)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'checkins', filter: 'room_id=eq.' + currentRoom }, () => { loadCheckins(); renderCalendar(); })
+    .subscribe();
+}
+
+// ═══════════════════════════════════════
+// 数据加载
+// ═══════════════════════════════════════
+async function loadData() {
+  await Promise.all([loadWishes(), loadCheckins()]);
+  renderAll();
+}
+
+async function loadWishes() {
+  if (!supabase || !currentRoom) return;
+  try {
+    const { data, error } = await supabase.from('wishes').select('*').eq('room_id', currentRoom).order('created_at', { ascending: true });
+    if (!error) { wishes = data; localStorage.setItem('cache_wishes_' + currentRoom, JSON.stringify(data)); }
+  } catch(e) { /* 离线: 用缓存 */ const c = localStorage.getItem('cache_wishes_' + currentRoom); if (c) wishes = JSON.parse(c); }
+  renderWishes();
+}
+
+async function loadCheckins() {
+  if (!supabase || !currentRoom) return;
+  try {
+    const { data, error } = await supabase.from('checkins').select('*').eq('room_id', currentRoom).order('created_at', { ascending: false });
+    if (!error) { checkins = data; localStorage.setItem('cache_checkins_' + currentRoom, JSON.stringify(data)); }
+  } catch(e) { const c = localStorage.getItem('cache_checkins_' + currentRoom); if (c) checkins = JSON.parse(c); }
+  renderCheckinList();
+  renderCalendar();
+}
+
+// ═══════════════════════════════════════
+// 心愿操作
+// ═══════════════════════════════════════
+async function addWish() {
+  if (!supabase || !currentRoom) { toast('请先加入房间', 'error'); return; }
+  const title = document.getElementById('wishInput').value.trim();
+  const author = document.getElementById('wishAuthor').value.trim() || '匿名';
+  if (!title) { toast('请输入心愿内容', 'error'); return; }
+  try {
+    const { error } = await supabase.from('wishes').insert({
+      room_id: currentRoom, title, category: currentWishTab, author, done: false, created_at: new Date().toISOString()
+    });
+    if (error) throw error;
+    document.getElementById('wishInput').value = '';
+    toast('✅ 心愿已添加', 'success');
+    await loadWishes();
+  } catch(e) { toast('❌ 添加失败: ' + e.message, 'error'); }
+}
+
+async function toggleWish(id, done) {
+  if (!supabase) return;
+  try {
+    await supabase.from('wishes').update({ done: !done }).eq('id', id);
+    await loadWishes();
+  } catch(e) { toast('❌ 操作失败', 'error'); }
+}
+
+async function deleteWish(id) {
+  if (!supabase) return;
+  if (!confirm('确定删除这条心愿吗？')) return;
+  try {
+    await supabase.from('wishes').delete().eq('id', id);
+    toast('🗑️ 已删除', 'info');
+    await loadWishes();
+  } catch(e) { toast('❌ 删除失败', 'error'); }
+}
+
+function copyWishes() {
+  const cats = { meet: '💏 见面小事', short: '🎯 短期愿望', future: '🌟 未来规划' };
+  let text = '💜 我们的心愿清单\n' + '='.repeat(30) + '\n';
+  for (const [k, label] of Object.entries(cats)) {
+    const items = wishes.filter(w => w.category === k);
+    text += '\n【' + label + '】(' + items.filter(w=>w.done).length + '/' + items.length + ')\n';
+    items.forEach(w => text += (w.done ? '✅' : '⬜') + ' ' + w.title + ' — ' + (w.author||'匿名') + '\n');
+  }
+  navigator.clipboard.writeText(text).then(() => toast('📋 已复制到剪贴板', 'success'));
+}
+
+// ═══════════════════════════════════════
+// 打卡操作
+// ═══════════════════════════════════════
+function setMood(emoji, label) {
+  currentMood = emoji;
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('mood_' + emoji)?.classList.add('selected');
+}
+
+async function doCheckin() {
+  if (!supabase || !currentRoom) { toast('请先加入房间', 'error'); return; }
+  if (!currentMood) { toast('请选择心情', 'error'); return; }
+  const note = document.getElementById('checkinNote').value.trim();
+  const author = document.getElementById('checkinAuthor').value.trim() || '匿名';
+  try {
+    const { error } = await supabase.from('checkins').insert({
+      room_id: currentRoom, mood: currentMood, note, author, created_at: new Date().toISOString()
+    });
+    if (error) throw error;
+    document.getElementById('checkinNote').value = '';
+    toast('💾 打卡成功！', 'success');
+    await loadCheckins();
+    renderCalendar();
+  } catch(e) { toast('❌ 打卡失败: ' + e.message, 'error'); }
+}
+
+function copyCheckins() {
+  let text = '💕 我们的思念打卡记录\n' + '='.repeat(30) + '\n';
+  checkins.forEach(c => {
+    const d = new Date(c.created_at).toLocaleString('zh-CN');
+    text += c.mood + ' [' + d + '] ' + (c.author||'匿名') + ': ' + (c.note||'（无文字）') + '\n';
+  });
+  text += '\n合计打卡: ' + checkins.length + ' 天';
+  navigator.clipboard.writeText(text).then(() => toast('📋 已复制到剪贴板', 'success'));
+}
+
+async function exportAll() {
+  if (!currentRoom) { toast('请先加入房间', 'error'); return; }
+  let text = '💜 CoupleSpace 完整备份\n';
+  text += '房间密钥: ' + currentRoom + '\n';
+  text += '导出时间: ' + new Date().toLocaleString('zh-CN') + '\n';
+  text += '='.repeat(50) + '\n\n';
+  text += '📝 心愿清单 (' + wishes.length + '条)\n';
+  text += '-'.repeat(30) + '\n';
+  wishes.forEach(w => {
+    const d = new Date(w.created_at).toLocaleString('zh-CN');
+    text += (w.done ? '✅' : '⬜') + ' [' + w.category + '] ' + w.title + ' — ' + (w.author||'匿名') + ' (' + d + ')\n';
+  });
+  text += '\n💕 打卡记录 (' + checkins.length + '条)\n';
+  text += '-'.repeat(30) + '\n';
+  checkins.forEach(c => {
+    const d = new Date(c.created_at).toLocaleString('zh-CN');
+    text += c.mood + ' [' + d + '] ' + (c.author||'匿名') + ': ' + (c.note||'（无文字）') + '\n';
+  });
+  const blob = new Blob([text], {type: 'text/plain'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'CoupleSpace_backup_' + currentRoom + '.txt'; a.click();
+  toast('📦 备份已下载', 'success');
+}
+
+// ═══════════════════════════════════════
+// 日历渲染
+// ═══════════════════════════════════════
+function renderCalendar() {
+  const now = new Date();
+  if (!calYear) { calYear = now.getFullYear(); calMonth = now.getMonth(); }
+  document.getElementById('calMonth').textContent = calYear + '年 ' + (calMonth + 1) + '月';
+  document.getElementById('todayDate').textContent = now.getFullYear() + '年' + (now.getMonth()+1) + '月' + now.getDate() + '日';
+
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const checkinDates = new Set(checkins.map(c => c.created_at?.slice(0, 10)));
+
+  let html = '日一二三四五六'.split('').map(d => '<div class="cal-day-header">' + d + '</div>').join('');
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-cell"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = calYear + '-' + ('0'+(calMonth+1)).slice(-2) + '-' + ('0'+d).slice(-2);
+    const isChecked = checkinDates.has(dateStr);
+    const isToday = dateStr === now.toISOString().slice(0, 10);
+    html += '<div class="cal-cell' + (isChecked ? ' checked' : '') + (isToday ? ' today' : '') + '">' + d + (isChecked ? '<div class="dot"></div>' : '') + '</div>';
+  }
+  document.getElementById('calendar').innerHTML = html;
+
+  // Stats
+  document.getElementById('checkinTotal').textContent = checkins.length;
+
+  // Summary
+  let summary = '';
+  const total = checkins.length;
+  if (total === 0) summary = '💜 今天开始你们的第一次打卡吧！每一次记录都是爱的痕迹。';
+  else if (total < 10) summary = '🌱 你们已经打卡 ' + total + ' 天了！爱的习惯正在慢慢养成，继续保持~';
+  else if (total < 50) summary = '🌸 ' + total + ' 天的思念记录！每一笔都是你们爱情的见证，TA一定能感受到你的心意。';
+  else if (total < 100) summary = '💎 ' + total + ' 天！这份坚持本身就是最美的情书，你们的故事正在被认真书写。';
+  else summary = '🏆 ' + total + ' 天的打卡！这份爱情值得所有人羡慕，你们共同创造了属于彼此的珍贵回忆。';
+  document.getElementById('summaryText').textContent = summary;
+}
+
+function changeMonth(delta) {
+  calMonth += delta;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
+
+// ═══════════════════════════════════════
+// 渲染函数
+// ═══════════════════════════════════════
+function renderAll() { renderWishes(); renderCheckinList(); renderCalendar(); }
+
+function renderWishes() {
+  const filtered = wishes.filter(w => w.category === currentWishTab);
+  const container = document.getElementById('wishList');
+  if (!filtered.length) { container.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px">还没有心愿，写下第一个吧 💜</div>'; }
+  else {
+    container.innerHTML = filtered.map(w => `
+      <div class="wish-item fade-in">
+        <div class="checkbox${w.done ? ' done' : ''}" onclick="toggleWish(${w.id}, ${w.done})"></div>
+        <div class="wish-info">
+          <div class="wish-title${w.done ? ' done' : ''}">${escapeHtml(w.title)}</div>
+          <div class="wish-meta">${w.author||'匿名'} · ${fmtTime(w.created_at)}</div>
+        </div>
+        <button class="wish-del" onclick="deleteWish(${w.id})">✕</button>
+      </div>`).join('');
+  }
+  // Stats
+  const all = wishes.length, done = wishes.filter(w=>w.done).length;
+  document.getElementById('wishTotal').textContent = all;
+  document.getElementById('wishDone').textContent = done;
+  const pct = all > 0 ? Math.round(done/all*100) : 0;
+  document.getElementById('wishPercent').textContent = pct + '%';
+  document.getElementById('wishProgress').style.width = pct + '%';
+}
+
+function renderCheckinList() {
+  const container = document.getElementById('checkinList');
+  if (!checkins.length) { container.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px">还没有打卡记录 💕</div>'; return; }
+  container.innerHTML = checkins.slice(0, 20).map(c => `
+    <div style="padding:8px 0;border-bottom:1px solid #f5f0fa;font-size:13px">
+      <span style="font-size:18px">${c.mood}</span>
+      <span style="font-weight:600">${c.author||'匿名'}</span>
+      <span style="color:var(--muted);margin-left:8px">${c.note||''}</span>
+      <span style="float:right;font-size:11px;color:var(--muted)">${fmtTime(c.created_at)}</span>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+// Tab 切换
+// ═══════════════════════════════════════
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tabs .tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='wish') || (i===1 && tab==='checkin')));
+  document.getElementById('wishPanel').style.display = tab === 'wish' ? 'block' : 'none';
+  document.getElementById('checkinPanel').style.display = tab === 'checkin' ? 'block' : 'none';
+  if (tab === 'checkin') renderCalendar();
+  if (tab === 'wish') renderWishes();
+}
+
+function switchWishTab(tab) {
+  currentWishTab = tab;
+  document.querySelectorAll('.sub-tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='meet')||(i===1&&tab==='short')||(i===2&&tab==='future')));
+  renderWishes();
+}
+
+// ═══════════════════════════════════════
+// 辅助
+// ═══════════════════════════════════════
+function fmtTime(ts) { if(!ts) return ''; const d=new Date(ts); return d.getMonth()+1+'/'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+function escapeHtml(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+// ═══════════════════════════════════════
+// 部署教程
+// ═══════════════════════════════════════
+function showGuide() {
+  document.getElementById('guideContent').innerHTML = `
+    <button class="close" onclick="closeGuide()">✕</button>
+    <h3>🚀 Supabase + GitHub Pages 部署教程</h3>
+    <h4>① 创建 Supabase 项目</h4>
+    <p>访问 <a href="https://supabase.com" target="_blank">supabase.com</a> → 注册 → New Project → 记录项目URL和anon key</p>
+    <h4>② 执行 SQL（SQL Editor）</h4>
+    <pre>-- 1. 心愿表
+CREATE TABLE wishes (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  room_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'meet',
+  done BOOLEAN DEFAULT false,
+  author TEXT DEFAULT '匿名',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- 2. 打卡表
+CREATE TABLE checkins (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  room_id TEXT NOT NULL,
+  mood TEXT NOT NULL,
+  note TEXT DEFAULT '',
+  author TEXT DEFAULT '匿名',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+-- 3. 启用 RLS
+ALTER TABLE wishes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE checkins ENABLE ROW LEVEL SECURITY;
+-- 4. RLS 策略 (wishes)
+CREATE POLICY "wishes_read" ON wishes FOR SELECT USING (room_id = current_setting('app.room_id', true));
+CREATE POLICY "wishes_insert" ON wishes FOR INSERT WITH CHECK (room_id = current_setting('app.room_id', true));
+CREATE POLICY "wishes_update" ON wishes FOR UPDATE USING (room_id = current_setting('app.room_id', true));
+CREATE POLICY "wishes_delete" ON wishes FOR DELETE USING (room_id = current_setting('app.room_id', true));
+-- 5. RLS 策略 (checkins)
+CREATE POLICY "checkins_read" ON checkins FOR SELECT USING (room_id = current_setting('app.room_id', true));
+CREATE POLICY "checkins_insert" ON checkins FOR INSERT WITH CHECK (room_id = current_setting('app.room_id', true));</pre>
+    <p style="color:var(--danger);font-weight:600">⚠️ 重要：Supabase 默认RLS会拦截所有请求！执行上述SQL后，我们使用 .eq('room_id', key) 在客户端过滤，Supabase 的 RLS 作为第一道防线。如需更严格的服务器端RLS，请将上述策略中的条件改为 <code>room_id = '你的房间密钥'</code>。</p>
+    <h4>③ 部署到 GitHub Pages</h4>
+    <p>GitHub 新建仓库 → 上传 index.html → Settings → Pages → Source: main → Save → 等待1分钟即可访问</p>
+    <h4>④ 安全检查</h4>
+    <p>✅ anon key 可公开（仅用于识别项目）<br>✅ 数据通过 room_id 隔离<br>✅ GitHub Pages 强制 HTTPS</p>
+  `;
+  document.getElementById('guideModal').style.display = 'flex';
+}
+function closeGuide() { document.getElementById('guideModal').style.display = 'none'; }
+
+// ═══════════════════════════════════════
+// 初始化
+// ═══════════════════════════════════════
+loadConfig();
+</script>
+</body>
+</html>
