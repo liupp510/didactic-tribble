@@ -242,16 +242,12 @@ body{font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;backgr
 </div>
 
 <!-- ═══════════ Scripts ═══════════ -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm" type="module">
-// ESM import handled below
-</script>
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
 // ═══════════════════════════════════════
 // 全局状态
 // ═══════════════════════════════════════
-let supabase = null;
+let supabaseClient = null;
 let currentRoom = null;
 let currentTab = 'wish';     // wish | checkin
 let currentWishTab = 'meet'; // meet | short | future
@@ -298,7 +294,7 @@ function loadConfig() {
 // ═══════════════════════════════════════
 function initSupabase(url, key) {
   try {
-    supabase = createClient(url, key);
+    supabaseClient = supabase.createClient(url, key);
     toast('✅ Supabase 已连接', 'success');
     // 尝试恢复房间
     const room = document.getElementById('roomKey').value.trim();
@@ -342,7 +338,7 @@ async function joinRoom() {
 // 实时订阅
 // ═══════════════════════════════════════
 function subscribeRealtime() {
-  if (realtimeChannel) supabase.removeChannel(realtimeChannel);
+  if (realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
   if (!currentRoom) return;
 
   realtimeChannel = supabase
@@ -361,18 +357,18 @@ async function loadData() {
 }
 
 async function loadWishes() {
-  if (!supabase || !currentRoom) return;
+  if (!supabaseClient || !currentRoom) return;
   try {
-    const { data, error } = await supabase.from('wishes').select('*').eq('room_id', currentRoom).order('created_at', { ascending: true });
+    const { data, error } = await supabaseClient.from('wishes').select('*').eq('room_id', currentRoom).order('created_at', { ascending: true });
     if (!error) { wishes = data; localStorage.setItem('cache_wishes_' + currentRoom, JSON.stringify(data)); }
   } catch(e) { /* 离线: 用缓存 */ const c = localStorage.getItem('cache_wishes_' + currentRoom); if (c) wishes = JSON.parse(c); }
   renderWishes();
 }
 
 async function loadCheckins() {
-  if (!supabase || !currentRoom) return;
+  if (!supabaseClient || !currentRoom) return;
   try {
-    const { data, error } = await supabase.from('checkins').select('*').eq('room_id', currentRoom).order('created_at', { ascending: false });
+    const { data, error } = await supabaseClient.from('checkins').select('*').eq('room_id', currentRoom).order('created_at', { ascending: false });
     if (!error) { checkins = data; localStorage.setItem('cache_checkins_' + currentRoom, JSON.stringify(data)); }
   } catch(e) { const c = localStorage.getItem('cache_checkins_' + currentRoom); if (c) checkins = JSON.parse(c); }
   renderCheckinList();
@@ -383,12 +379,12 @@ async function loadCheckins() {
 // 心愿操作
 // ═══════════════════════════════════════
 async function addWish() {
-  if (!supabase || !currentRoom) { toast('请先加入房间', 'error'); return; }
+  if (!supabaseClient || !currentRoom) { toast('请先加入房间', 'error'); return; }
   const title = document.getElementById('wishInput').value.trim();
   const author = document.getElementById('wishAuthor').value.trim() || '匿名';
   if (!title) { toast('请输入心愿内容', 'error'); return; }
   try {
-    const { error } = await supabase.from('wishes').insert({
+    const { error } = await supabaseClient.from('wishes').insert({
       room_id: currentRoom, title, category: currentWishTab, author, done: false, created_at: new Date().toISOString()
     });
     if (error) throw error;
@@ -401,7 +397,7 @@ async function addWish() {
 async function toggleWish(id, done) {
   if (!supabase) return;
   try {
-    await supabase.from('wishes').update({ done: !done }).eq('id', id);
+    await supabaseClient.from('wishes').update({ done: !done }).eq('id', id);
     await loadWishes();
   } catch(e) { toast('❌ 操作失败', 'error'); }
 }
@@ -410,7 +406,7 @@ async function deleteWish(id) {
   if (!supabase) return;
   if (!confirm('确定删除这条心愿吗？')) return;
   try {
-    await supabase.from('wishes').delete().eq('id', id);
+    await supabaseClient.from('wishes').delete().eq('id', id);
     toast('🗑️ 已删除', 'info');
     await loadWishes();
   } catch(e) { toast('❌ 删除失败', 'error'); }
@@ -437,12 +433,12 @@ function setMood(emoji, label) {
 }
 
 async function doCheckin() {
-  if (!supabase || !currentRoom) { toast('请先加入房间', 'error'); return; }
+  if (!supabaseClient || !currentRoom) { toast('请先加入房间', 'error'); return; }
   if (!currentMood) { toast('请选择心情', 'error'); return; }
   const note = document.getElementById('checkinNote').value.trim();
   const author = document.getElementById('checkinAuthor').value.trim() || '匿名';
   try {
-    const { error } = await supabase.from('checkins').insert({
+    const { error } = await supabaseClient.from('checkins').insert({
       room_id: currentRoom, mood: currentMood, note, author, created_at: new Date().toISOString()
     });
     if (error) throw error;
